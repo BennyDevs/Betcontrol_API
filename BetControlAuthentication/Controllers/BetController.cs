@@ -47,13 +47,30 @@ namespace BetControlAPI.Controllers
             return Ok(bets);
         }
 
+        //[MapToApiVersion("1.0")]
+        //[HttpGet("getbookies")]
+        //public async Task<IActionResult> GetUserBookies()
+        //{
+        //    var user = await GetUser();
+        //    var bookies = await _context.Bets.Join(
+        //        _context.Bookies,
+        //        bet => bet.Id,
+        //        bookie => bookie.Id,
+        //        (bet, bookie) => new
+        //        {
+        //            BookieId = bookie.Id,
+        //            Bet = bet,
+        //            BookieName = bookie.Name
+        //        }).ToListAsync();
+
+        //    return Ok(bookies);
+        //}
+
         [MapToApiVersion("1.0")]
         [HttpPost("addbet")]
         public async Task<IActionResult> AddBet([FromBody] Bet bet)
         {
             var user = await GetUser();
-            //var bookie = await _context.Bookies.FirstOrDefaultAsync(bookie => bookie.Id == bet.Bookie.Id);
-            //var user = await _context.Users.FirstOrDefaultAsync(user => user.Email.ToLower().Equals(email.ToLower()));
 
             var newBet = new Bet
             {
@@ -99,13 +116,12 @@ namespace BetControlAPI.Controllers
         {
             var user = await GetUser();
 
-            var amountOfBets = _context.Bets.Where(bet => bet.UserId == user.Id).Count();
+            var userBets = _context.Bets.Where(bet => bet.UserId == user.Id);
 
             var pageResults = 10f;
-            var pageCount = Math.Ceiling(amountOfBets / pageResults);
+            var pageCount = Math.Ceiling(userBets.Count() / pageResults);
 
-            var bets = await _context.Bets
-                .Where(bet => bet.UserId == user.Id)
+            var bets = await userBets
                 .OrderByDescending(bet => bet.EventTime)
                 .Skip((page - 1) * (int)pageResults)
                 .Take((int)pageResults)
@@ -116,11 +132,19 @@ namespace BetControlAPI.Controllers
                 Bets = bets,
                 CurrentPage = page,
                 Pages = (int)pageCount,
-                AmountOfBets = amountOfBets
+                AmountOfBets = userBets.Count()
             };
 
             return Ok(response);
         }
+
+        //[HttpGet]
+        //public async Task<ActionResult<List<Bet>>> GetUserBookies()
+        //{
+        //    var user = await GetUser();
+        //    var userBookies = _context.Bets.Where(bet => bet.UserId == user.Id);
+
+        //}
 
         //[HttpPost]
         //public ActionResult<List<Bet>> AddBet(Bet bet)

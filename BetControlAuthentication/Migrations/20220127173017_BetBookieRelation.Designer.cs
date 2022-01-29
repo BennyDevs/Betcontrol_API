@@ -3,6 +3,7 @@ using System;
 using BetControlAuthentication.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BetControlAuthentication.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220127173017_BetBookieRelation")]
+    partial class BetBookieRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
@@ -23,8 +25,8 @@ namespace BetControlAuthentication.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Bookie")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("BookieId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Event")
                         .IsRequired()
@@ -64,9 +66,26 @@ namespace BetControlAuthentication.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookieId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Bets");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Bookie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Bookies");
                 });
 
             modelBuilder.Entity("BetControlAuthentication.Models.User", b =>
@@ -109,11 +128,24 @@ namespace BetControlAuthentication.Migrations
 
             modelBuilder.Entity("BetControlAuthentication.Models.Bet", b =>
                 {
+                    b.HasOne("BetControlAuthentication.Models.Bookie", "Bookie")
+                        .WithMany("Bets")
+                        .HasForeignKey("BookieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BetControlAuthentication.Models.User", null)
                         .WithMany("Bets")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Bookie");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Bookie", b =>
+                {
+                    b.Navigation("Bets");
                 });
 
             modelBuilder.Entity("BetControlAuthentication.Models.User", b =>

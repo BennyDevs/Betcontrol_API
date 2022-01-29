@@ -5,6 +5,6 @@ namespace BetControlAuthentication.Models
     {
         public int Id { get; set; }        
         public string Name { get; set; } = String.Empty;
-        public virtual ICollection<Bet>? Bets { get; set; }
+        //public virtual ICollection<Bet>? Bets { get; set; }
     }
 }
