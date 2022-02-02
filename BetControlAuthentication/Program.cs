@@ -66,7 +66,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.Scope.Add("profile");
         options.SignInScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ExternalScheme;
     })
-    .AddCookie();
+    .AddCookie("BetControl", options =>
+    {
+        options.Cookie.Name = "BetControl";
+    });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {

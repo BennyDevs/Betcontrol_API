@@ -111,12 +111,25 @@ namespace BetControlAPI.Controllers
             return Ok(user.Bets);
         }
 
+        [MapToApiVersion("1.0")]
+        [HttpGet("usersports")]
+        public async Task<ActionResult<List<Bet>>> GetUserSports()
+        {
+            var user = await GetUser();
+            var userBets = await (from bet in _context.Bets.Where(bet => bet.UserId == user.Id) join sports in _context.Sports on bet.Sport.Id equals sports.Id select sports).ToListAsync();
+
+            return Ok(userBets);
+        }
+
+        [MapToApiVersion("1.0")]
         [HttpGet("{page}")]
         public async Task<ActionResult<List<Bet>>> GetBets(int page)
         {
             var user = await GetUser();
 
-            var userBets = _context.Bets.Where(bet => bet.UserId == user.Id);
+            //var userBets = _context.Bets.Where(bet => bet.UserId == user.Id);
+
+            var userBets = (from bet in _context.Bets.Where(bet => bet.UserId == user.Id) join sports in _context.Sports on bet.Sport.Id equals sports.Id select bet).AsNoTracking();
 
             var pageResults = 10f;
             var pageCount = Math.Ceiling(userBets.Count() / pageResults);

@@ -15,7 +15,7 @@ namespace BetControlAuthentication.Models
         public string Event { get; set; } = String.Empty;
         public string Selection { get; set; } = String.Empty;
         public string? Bookie { get; set; }
-        public string? Sport { get; set; }
+        public Sport? Sport { get; set; }
         public string? Tipster { get; set; }
         public double Odds { get; set; }
         public double Stake { get; set; }

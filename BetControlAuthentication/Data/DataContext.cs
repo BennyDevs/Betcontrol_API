@@ -13,6 +13,7 @@ namespace BetControlAuthentication.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Bet> Bets { get; set; }
+        public DbSet<Sport> Sports { get; set; }
         //public DbSet<Bookie> Bookies { get; set; }
     }
 }
