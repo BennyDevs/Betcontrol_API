@@ -23,8 +23,8 @@ namespace BetControlAuthentication.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Bookie")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("BookieId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Event")
                         .IsRequired()
@@ -56,19 +56,38 @@ namespace BetControlAuthentication.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Tipster")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("TipsterId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BookieId");
+
                     b.HasIndex("SportId");
+
+                    b.HasIndex("TipsterId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Bets");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Bookie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Bookies");
                 });
 
             modelBuilder.Entity("BetControlAuthentication.Models.Sport", b =>
@@ -84,6 +103,21 @@ namespace BetControlAuthentication.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Sports");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Tipster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tipsters");
                 });
 
             modelBuilder.Entity("BetControlAuthentication.Models.User", b =>
@@ -126,9 +160,17 @@ namespace BetControlAuthentication.Migrations
 
             modelBuilder.Entity("BetControlAuthentication.Models.Bet", b =>
                 {
+                    b.HasOne("BetControlAuthentication.Models.Bookie", "Bookie")
+                        .WithMany("Bets")
+                        .HasForeignKey("BookieId");
+
                     b.HasOne("BetControlAuthentication.Models.Sport", "Sport")
-                        .WithMany()
+                        .WithMany("Bets")
                         .HasForeignKey("SportId");
+
+                    b.HasOne("BetControlAuthentication.Models.Tipster", "Tipster")
+                        .WithMany("Bets")
+                        .HasForeignKey("TipsterId");
 
                     b.HasOne("BetControlAuthentication.Models.User", null)
                         .WithMany("Bets")
@@ -136,7 +178,26 @@ namespace BetControlAuthentication.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Bookie");
+
                     b.Navigation("Sport");
+
+                    b.Navigation("Tipster");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Bookie", b =>
+                {
+                    b.Navigation("Bets");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Sport", b =>
+                {
+                    b.Navigation("Bets");
+                });
+
+            modelBuilder.Entity("BetControlAuthentication.Models.Tipster", b =>
+                {
+                    b.Navigation("Bets");
                 });
 
             modelBuilder.Entity("BetControlAuthentication.Models.User", b =>

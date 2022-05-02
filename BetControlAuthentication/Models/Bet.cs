@@ -14,9 +14,9 @@ namespace BetControlAuthentication.Models
         public DateTime EventTime { get; set; } = DateTime.Now;
         public string Event { get; set; } = String.Empty;
         public string Selection { get; set; } = String.Empty;
-        public string? Bookie { get; set; }
+        public Bookie? Bookie { get; set; }
         public Sport? Sport { get; set; }
-        public string? Tipster { get; set; }
+        public Tipster? Tipster { get; set; }
         public double Odds { get; set; }
         public double Stake { get; set; }
         public string Status { get; set; } = "NEW";

@@ -4,7 +4,6 @@
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/BetControlAuthentication.deps.json
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/BetControlAuthentication.runtimeconfig.json
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/BetControlAuthentication.dll
-/Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/ref/BetControlAuthentication.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/BetControlAuthentication.pdb
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Humanizer.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
@@ -66,3 +65,5 @@
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/System.Security.Permissions.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.Google.dll
+/Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/obj/Debug/net6.0/refint/BetControlAuthentication.dll
+/Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.Extensions.Caching.Memory.dll

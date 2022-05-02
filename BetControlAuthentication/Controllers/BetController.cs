@@ -34,36 +34,17 @@ namespace BetControlAPI.Controllers
         private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         private async Task<User> GetUser() => await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
 
-        [MapToApiVersion("1.0")]
-        [HttpGet]
-        public async Task<IActionResult> GetUserBets()
-        {
-            var user = await GetUser();
-            var bets = await _context.Bets.Where(bet => bet.UserId == user.Id).ToListAsync();
-
-            if (bets == null)
-                return NotFound("No bets found!");
-
-            return Ok(bets);
-        }
-
         //[MapToApiVersion("1.0")]
-        //[HttpGet("getbookies")]
-        //public async Task<IActionResult> GetUserBookies()
+        //[HttpGet]
+        //public async Task<IActionResult> GetUserBets()
         //{
         //    var user = await GetUser();
-        //    var bookies = await _context.Bets.Join(
-        //        _context.Bookies,
-        //        bet => bet.Id,
-        //        bookie => bookie.Id,
-        //        (bet, bookie) => new
-        //        {
-        //            BookieId = bookie.Id,
-        //            Bet = bet,
-        //            BookieName = bookie.Name
-        //        }).ToListAsync();
+        //    var bets = await _context.Bets.Where(bet => bet.UserId == user.Id).ToListAsync();
 
-        //    return Ok(bookies);
+        //    if (bets == null)
+        //        return NotFound("No bets found!");
+
+        //    return Ok(bets);
         //}
 
         [MapToApiVersion("1.0")]
@@ -71,6 +52,27 @@ namespace BetControlAPI.Controllers
         public async Task<IActionResult> AddBet([FromBody] Bet bet)
         {
             var user = await GetUser();
+
+            double result = 0;
+
+            switch (bet.Status)
+            {
+                case "WON":
+                    result = (bet.Stake * bet.Odds) - bet.Stake;
+                    break;
+                case "HALF WON":
+                    result = ((bet.Stake * bet.Odds) - (bet.Stake)) / 2;
+                    break;
+                case "LOST":
+                    result = -bet.Stake;
+                    break;
+                case "HALF LOST":
+                    result = -(bet.Stake / 2);
+                    break;
+                default:
+                    result = 0;
+                    break;
+            }
 
             var newBet = new Bet
             {
@@ -85,13 +87,67 @@ namespace BetControlAPI.Controllers
                 Tipster = bet.Tipster,
                 Status = bet.Status,
                 Locked = bet.Locked,
-                Result = bet.Result
+                Result = result
             };
 
-            _context.Bets.Add(newBet);
-            await _context.SaveChangesAsync();
-            return Ok(user.Bets);
+            try
+            {
+                _context.Bets.Add(newBet);
+                await _context.SaveChangesAsync();
+                return Ok(user.Bets);
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest("Failed creating new bet..");
+            }
+
         }
+
+        [MapToApiVersion("1.0")]
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateBet(int id, [FromBody] Bet bet)
+        {
+            if (id <= 0)
+                return BadRequest("Not a valid ID.");
+
+            var user = await GetUser();
+            var userBet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
+
+            if (bet == null)
+                return BadRequest("Bet not found and was therefore not able to update bet!");
+
+            switch (bet.Status)
+            {
+                case "WON":
+                    bet.Result = (bet.Stake * bet.Odds) - bet.Stake;
+                    break;
+                case "HALF WON":
+                    bet.Result = ((bet.Stake * bet.Odds) - (bet.Stake)) / 2;
+                    break;
+                case "LOST":
+                    bet.Result = -bet.Stake;
+                    break;
+                case "HALF LOST":
+                    bet.Result = -(bet.Stake / 2);
+                    break;
+                default:
+                    bet.Result = 0;
+                    break;
+            }
+
+            try
+            {
+                _context.Bets.Update(bet);
+                _context.SaveChangesAsync();
+                return Ok(user.Bets);
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest("Failed removing bet.");
+            }
+
+        }
+            
 
         [MapToApiVersion("1.0")]
         [HttpDelete("{id}")]
@@ -102,23 +158,20 @@ namespace BetControlAPI.Controllers
 
             var user = await GetUser();
 
-            var bet = await _context.Bets.FindAsync(id);
+            var bet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
             if (bet == null)
                 return BadRequest("Bet not found!");
-            
-            _context.Bets.Remove(bet);
-            await _context.SaveChangesAsync();
-            return Ok(user.Bets);
-        }
 
-        [MapToApiVersion("1.0")]
-        [HttpGet("usersports")]
-        public async Task<ActionResult<List<Bet>>> GetUserSports()
-        {
-            var user = await GetUser();
-            var userBets = await (from bet in _context.Bets.Where(bet => bet.UserId == user.Id) join sports in _context.Sports on bet.Sport.Id equals sports.Id select sports).ToListAsync();
-
-            return Ok(userBets);
+            try
+            {
+                _context.Bets.Remove(bet);
+                await _context.SaveChangesAsync();
+                return Ok(user.Bets);
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest("Failed removing bet.");
+            }
         }
 
         [MapToApiVersion("1.0")]
@@ -127,9 +180,26 @@ namespace BetControlAPI.Controllers
         {
             var user = await GetUser();
 
-            //var userBets = _context.Bets.Where(bet => bet.UserId == user.Id);
+            var userBets = _context.Bets.AsNoTracking()
+                .Where(bet => bet.UserId == user.Id)
+                .Include(bet => bet.Sport)
+                .Include(bet => bet.Bookie)
+                .Include(bet => bet.Tipster);
 
-            var userBets = (from bet in _context.Bets.Where(bet => bet.UserId == user.Id) join sports in _context.Sports on bet.Sport.Id equals sports.Id select bet).AsNoTracking();
+            var userBookies = userBets.AsEnumerable().Select(bookie => bookie.Bookie.Name);
+            var bookieQuery = userBookies.GroupBy(x => x).Select(x => new { BookieName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
+            var mostCommonBookie = bookieQuery.First().BookieName;
+
+            var userSports = userBets.AsEnumerable().Select(sport => sport.Sport.Name);
+            var sportQuery = userSports.GroupBy(x => x).Select(x => new { SportName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
+            var mostCommonSport = sportQuery.First().SportName;
+
+            var userTipsters = userBets.AsEnumerable().Select(tipster => tipster.Tipster.Name);
+            var tipsterQuery = userTipsters.GroupBy(x => x).Select(x => new { TipsterName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
+            var mostCommonTipster = tipsterQuery.First().TipsterName;
+
+            double results = userBets.Sum(bet => bet.Result);
+            double ROI = results / userBets.Count();
 
             var pageResults = 10f;
             var pageCount = Math.Ceiling(userBets.Count() / pageResults);
@@ -145,31 +215,18 @@ namespace BetControlAPI.Controllers
                 Bets = bets,
                 CurrentPage = page,
                 Pages = (int)pageCount,
-                AmountOfBets = userBets.Count()
+                AmountOfBets = userBets.Count(),
+                UserResult = results,
+                ROI = ROI,
+                UserBookies = userBookies.Distinct(),
+                UserSports = userSports.Distinct(),
+                UserTipsters = userTipsters.Distinct(),
+                CommonUserBookie = mostCommonBookie,
+                CommonUserSport = mostCommonSport,
+                CommonUserTipster = mostCommonTipster
             };
 
             return Ok(response);
         }
-
-        //[HttpGet]
-        //public async Task<ActionResult<List<Bet>>> GetUserBookies()
-        //{
-        //    var user = await GetUser();
-        //    var userBookies = _context.Bets.Where(bet => bet.UserId == user.Id);
-
-        //}
-
-        //[HttpPost]
-        //public ActionResult<List<Bet>> AddBet(Bet bet)
-        //{
-        //    return _betService.AddBet(bet);
-        //}
-
-        //[HttpDelete("{id}")]
-        //public ActionResult<List<Bet>> RemoveBet(int id)
-        //{
-        //    return _betService.RemoveBet(id);
-        //}
     }
 }
-
