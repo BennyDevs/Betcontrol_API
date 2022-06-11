@@ -67,3 +67,5 @@
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.Google.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/obj/Debug/net6.0/refint/BetControlAuthentication.dll
 /Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.Extensions.Caching.Memory.dll
+/Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/benjaminyndestadaam/Projects/BetControlAPI/BetControlAuthentication/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.Twitter.dll

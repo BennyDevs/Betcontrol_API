@@ -34,24 +34,11 @@ namespace BetControlAPI.Controllers
         private int GetUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         private async Task<User> GetUser() => await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
 
-        //[MapToApiVersion("1.0")]
-        //[HttpGet]
-        //public async Task<IActionResult> GetUserBets()
-        //{
-        //    var user = await GetUser();
-        //    var bets = await _context.Bets.Where(bet => bet.UserId == user.Id).ToListAsync();
-
-        //    if (bets == null)
-        //        return NotFound("No bets found!");
-
-        //    return Ok(bets);
-        //}
-
         [MapToApiVersion("1.0")]
         [HttpPost("addbet")]
         public async Task<IActionResult> AddBet([FromBody] Bet bet)
         {
-            var user = await GetUser();
+            User? user = await GetUser();
 
             double result = 0;
 
@@ -74,7 +61,7 @@ namespace BetControlAPI.Controllers
                     break;
             }
 
-            var newBet = new Bet
+            Bet? newBet = new Bet
             {
                 UserId = user.Id,
                 Selection = bet.Selection,
@@ -110,8 +97,8 @@ namespace BetControlAPI.Controllers
             if (id <= 0)
                 return BadRequest("Not a valid ID.");
 
-            var user = await GetUser();
-            var userBet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
+            User? user = await GetUser();
+            Bet? userBet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
 
             if (bet == null)
                 return BadRequest("Bet not found and was therefore not able to update bet!");
@@ -138,7 +125,7 @@ namespace BetControlAPI.Controllers
             try
             {
                 _context.Bets.Update(bet);
-                _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
                 return Ok(user.Bets);
             }
             catch (DbUpdateException)
@@ -147,7 +134,7 @@ namespace BetControlAPI.Controllers
             }
 
         }
-            
+
 
         [MapToApiVersion("1.0")]
         [HttpDelete("{id}")]
@@ -158,7 +145,7 @@ namespace BetControlAPI.Controllers
 
             var user = await GetUser();
 
-            var bet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
+            Bet? bet = await _context.Bets.Where(bet => bet.Id == user.Id).FirstOrDefaultAsync(bet => bet.Id == id);
             if (bet == null)
                 return BadRequest("Bet not found!");
 
@@ -186,31 +173,37 @@ namespace BetControlAPI.Controllers
                 .Include(bet => bet.Bookie)
                 .Include(bet => bet.Tipster);
 
-            var userBookies = userBets.AsEnumerable().Select(bookie => bookie.Bookie.Name);
-            var bookieQuery = userBookies.GroupBy(x => x).Select(x => new { BookieName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
-            var mostCommonBookie = bookieQuery.First().BookieName;
+            IEnumerable<string>? userBookies = userBets.AsEnumerable().Select(bookie => bookie.Bookie.Name);
+            var bookieQuery = userBookies.GroupBy(x => x)
+                                         .Select(x => new { BookieName = x.Key, Count = x.Count() })
+                                         .OrderByDescending(x => x.Count);
+            string? mostCommonBookie = bookieQuery.First().BookieName;
 
-            var userSports = userBets.AsEnumerable().Select(sport => sport.Sport.Name);
-            var sportQuery = userSports.GroupBy(x => x).Select(x => new { SportName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
-            var mostCommonSport = sportQuery.First().SportName;
+            IEnumerable<string>? userSports = userBets.AsEnumerable().Select(sport => sport.Sport.Name);
+            var sportQuery = userSports.GroupBy(x => x)
+                                       .Select(x => new { SportName = x.Key, Count = x.Count() })
+                                       .OrderByDescending(x => x.Count);
+            string? mostCommonSport = sportQuery.First().SportName;
 
-            var userTipsters = userBets.AsEnumerable().Select(tipster => tipster.Tipster.Name);
-            var tipsterQuery = userTipsters.GroupBy(x => x).Select(x => new { TipsterName = x.Key, Count = x.Count() }).OrderByDescending(x => x.Count);
-            var mostCommonTipster = tipsterQuery.First().TipsterName;
+            IEnumerable<string>? userTipsters = userBets.AsEnumerable().Select(tipster => tipster.Tipster.Name);
+            var tipsterQuery = userTipsters.GroupBy(x => x)
+                                           .Select(x => new { TipsterName = x.Key, Count = x.Count() })
+                                           .OrderByDescending(x => x.Count);
+            string? mostCommonTipster = tipsterQuery.First().TipsterName;
 
             double results = userBets.Sum(bet => bet.Result);
             double ROI = results / userBets.Count();
 
             var pageResults = 10f;
-            var pageCount = Math.Ceiling(userBets.Count() / pageResults);
+            double pageCount = Math.Ceiling(userBets.Count() / pageResults);
 
-            var bets = await userBets
+            List<Bet>? bets = await userBets
                 .OrderByDescending(bet => bet.EventTime)
                 .Skip((page - 1) * (int)pageResults)
                 .Take((int)pageResults)
                 .ToListAsync();
 
-            var response = new BetResponse
+            BetResponse? response = new BetResponse
             {
                 Bets = bets,
                 CurrentPage = page,
@@ -225,6 +218,41 @@ namespace BetControlAPI.Controllers
                 CommonUserSport = mostCommonSport,
                 CommonUserTipster = mostCommonTipster
             };
+
+            return Ok(response);
+        }
+
+        [MapToApiVersion("1.0")]
+        [HttpGet("betresults")]
+        public async Task<ActionResult> GetResults()
+        {
+            User? user = await GetUser();
+
+            var userBets = _context.Bets.AsNoTracking()
+                .Where(bet => bet.UserId == user.Id)
+                .Include(bet => bet.Sport)
+                .Include(bet => bet.Bookie)
+                .Include(bet => bet.Tipster);
+
+            IEnumerable<string>? lastTwelveMonths = Enumerable.Range(0, 13).Select(i => DateTime.Now.AddMonths(1 + (i - 13))).Select(date => date.ToString("Y"));
+
+            double results = userBets.Sum(bet => bet.Result);
+            //var months = userBets.AsEnumerable().Select(month => month.EventTime.ToString("Y")).Distinct().ToList();
+
+            List<BetResultResponse> response = new List<BetResultResponse>();
+            double overAllResults = 0;
+            foreach (var month in lastTwelveMonths)
+            {
+                double result = userBets.AsEnumerable().Where(bet => bet.EventTime.ToString("Y") == month).Sum(bet => bet.Result);
+                overAllResults += result;
+
+                response.Add(new BetResultResponse
+                {
+                    MonthlyResult = result,
+                    OverAllResult = overAllResults,
+                    Month = month,
+                });
+            }
 
             return Ok(response);
         }

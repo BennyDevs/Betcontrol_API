@@ -56,6 +56,7 @@ namespace BetControlAuthentication.Controllers
 
             return !response.Success ? BadRequest(response) : Ok(response);
         }
+
     }
 }
 

@@ -69,6 +69,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie("BetControl", options =>
     {
         options.Cookie.Name = "BetControl";
+    })
+    .AddTwitter(options =>
+    {
+        options.ConsumerKey = configuration["Authentication:Twitter:ConsumerAPIKey"];
+        options.ConsumerSecret = configuration["Authentication:Twitter:ConsumerSecret"];
     });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>

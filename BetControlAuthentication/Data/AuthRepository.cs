@@ -59,7 +59,7 @@ namespace BetControlAuthentication.Data
 
         public async Task<bool> UserExists(string email, string username)
         {
-            if (username != "")
+            if (username is not null)
             {
                 if (await _context.Users.AnyAsync(user => user.Email.ToLower().Equals(email.ToLower())) || await _context.Users.AnyAsync(user => user.Username.ToLower().Equals(username.ToLower())))
                     return true;
