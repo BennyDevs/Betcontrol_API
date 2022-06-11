@@ -31,6 +31,7 @@ namespace BetControlAuthentication.Data
             else
             {
                 response.Data = CreateToken(user);
+                response.Username = user.Username;
                 response.Success = true;
             }
             return response;
@@ -42,7 +43,7 @@ namespace BetControlAuthentication.Data
             {
                 return new ServiceResponse<int> {
                     Success = false,
-                    Message = "User already exists"
+                    Message = "Email and/or username already exists"
                 };
             }
 
@@ -59,15 +60,8 @@ namespace BetControlAuthentication.Data
 
         public async Task<bool> UserExists(string email, string username)
         {
-            if (username is not null)
-            {
-                if (await _context.Users.AnyAsync(user => user.Email.ToLower().Equals(email.ToLower())) || await _context.Users.AnyAsync(user => user.Username.ToLower().Equals(username.ToLower())))
-                    return true;
-            } else
-            {
-                if (await _context.Users.AnyAsync(user => user.Email.ToLower().Equals(email.ToLower())))
-                    return true;
-            }
+            if (await _context.Users.AnyAsync(user => user.Email.ToLower().Equals(email.ToLower())) || await _context.Users.AnyAsync(user => user.Username.ToLower().Equals(username.ToLower())))
+                return true;
 
             return false;
         }
@@ -102,7 +96,7 @@ namespace BetControlAuthentication.Data
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Email)
+                new Claim(ClaimTypes.Name, user.Email),
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
