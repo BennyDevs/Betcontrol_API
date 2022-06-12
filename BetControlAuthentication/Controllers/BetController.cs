@@ -68,9 +68,9 @@ namespace BetControlAPI.Controllers
                 .Include(bet => bet.Bookie)
                 .Include(bet => bet.Tipster);
 
-            var bookie = bet.Bookie;
-            var userBookies = userBets.AsEnumerable().Select(b => b.Bookie).ToList() ;
-            bool bookieExist = userBookies.Any(b => b.Name.ToString().ToLower() == bookie.Name.ToLower());
+            Bookie? bookie = bet.Bookie;
+            List<Bookie?>? userBookies = userBets.AsEnumerable().Select(b => b.Bookie).ToList() ;
+            bool bookieExist = userBookies.Any(b => b.Name.ToString().ToLower() == bookie.Name.ToString().ToLower());
 
             if (bookieExist)
                 bookie = userBookies.Where(b => b.Name.ToLower() == bookie.Name.ToLower()).First();
@@ -83,11 +83,8 @@ namespace BetControlAPI.Controllers
                 EventTime = bet.EventTime,
                 Odds = bet.Odds,
                 Stake = bet.Stake,
-                Bookie =
-                {
-                    Id = bookie.Id,
-                    Name = bookie.Name
-                },
+                BookieId = bookie.Id,
+                Bookie = bookie,
                 Sport = bet.Sport,
                 Tipster = bet.Tipster,
                 Status = bet.Status,
