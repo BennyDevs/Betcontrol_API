@@ -25,6 +25,7 @@ namespace BetControlAPI.Controllers
     public class BetController : ControllerBase
     {
         private readonly DataContext _context;
+        private string mostCommonBookie;
 
         public BetController(DataContext context)
         {
@@ -61,6 +62,19 @@ namespace BetControlAPI.Controllers
                     break;
             }
 
+            var userBets = _context.Bets.AsNoTracking()
+                .Where(bet => bet.UserId == user.Id)
+                .Include(bet => bet.Sport)
+                .Include(bet => bet.Bookie)
+                .Include(bet => bet.Tipster);
+
+            var bookie = bet.Bookie;
+            var userBookies = userBets.AsEnumerable().Select(b => b.Bookie).ToList() ;
+            bool bookieExist = userBookies.Any(b => b.Name.ToString().ToLower() == bookie.Name.ToLower());
+
+            if (bookieExist)
+                bookie = userBookies.Where(b => b.Name.ToLower() == bookie.Name.ToLower()).First();
+
             Bet? newBet = new Bet
             {
                 UserId = user.Id,
@@ -69,7 +83,11 @@ namespace BetControlAPI.Controllers
                 EventTime = bet.EventTime,
                 Odds = bet.Odds,
                 Stake = bet.Stake,
-                Bookie = bet.Bookie,
+                Bookie =
+                {
+                    Id = bookie.Id,
+                    Name = bookie.Name
+                },
                 Sport = bet.Sport,
                 Tipster = bet.Tipster,
                 Status = bet.Status,
@@ -85,7 +103,7 @@ namespace BetControlAPI.Controllers
             }
             catch (DbUpdateException)
             {
-                return BadRequest("Failed creating new bet..");
+                return BadRequest("Was not able to add bet.");
             }
 
         }

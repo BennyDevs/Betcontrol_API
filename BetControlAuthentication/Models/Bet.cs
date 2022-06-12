@@ -14,6 +14,8 @@ namespace BetControlAuthentication.Models
         public DateTime EventTime { get; set; } = DateTime.Now;
         public string Event { get; set; } = String.Empty;
         public string Selection { get; set; } = String.Empty;
+        [ForeignKey("Bookie")]
+        public int BookieId { get; set; }
         public Bookie? Bookie { get; set; }
         public Sport? Sport { get; set; }
         public Tipster? Tipster { get; set; }
