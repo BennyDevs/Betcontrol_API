@@ -17,7 +17,11 @@ namespace BetControlAuthentication.Models
         [ForeignKey("Bookie")]
         public int BookieId { get; set; }
         public Bookie? Bookie { get; set; }
+        [ForeignKey("Sport")]
+        public int SportId { get; set; }
         public Sport? Sport { get; set; }
+        [ForeignKey("Tipster")]
+        public int TipsterId { get; set; }
         public Tipster? Tipster { get; set; }
         public double Odds { get; set; }
         public double Stake { get; set; }
